@@ -1,99 +1,272 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NestJS Study Notes
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Project Structure
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+A typical NestJS project structure:
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+```
+/dist             - Contains compiled JavaScript code
+/node_modules     - Contains project dependencies
+/src              - Contains your source code
+  /tasks          - Feature module folder
+    /dto          - Data Transfer Objects
+    task.entity.ts
+    tasks.controller.ts
+    tasks.service.ts
+    tasks.module.ts
+  app.module.ts   - Root module
+  main.ts         - Application entry point
+/test            - Contains test files
 ```
 
-## Compile and run the project
+## Core Components
 
-```bash
-# development
-$ npm run start
+### 1. Modules
 
-# watch mode
-$ npm run start:dev
+- Used to organize related features together
+- Each feature module encapsulates a specific functionality
+- The `AppModule` is the root module that ties everything together
 
-# production mode
-$ npm run start:prod
+Example:
+
+```typescript
+// app.module.ts
+@Module({
+  imports: [TasksModule],
+})
+export class AppModule {}
+
+// tasks.module.ts
+@Module({
+  controllers: [TasksController],
+  providers: [TasksService],
+})
+export class TasksModule {}
 ```
 
-## Run tests
+### 2. Controllers
 
-```bash
-# unit tests
-$ npm run test
+- Handle HTTP requests
+- Define API endpoints
+- Route requests to appropriate services
+- Use decorators to define routes and HTTP methods
 
-# e2e tests
-$ npm run test:e2e
+Example:
 
-# test coverage
-$ npm run test:cov
+```typescript
+@Controller('tasks')
+export class TasksController {
+  constructor(private tasksService: TasksService) {}
+
+  @Get()
+  getAllTasks() {
+    return this.tasksService.getAllTasks();
+  }
+
+  @Post()
+  createTask(@Body() createTaskDto: CreateTaskDto) {
+    return this.tasksService.createTask(createTaskDto);
+  }
+}
 ```
 
-## Deployment
+### 3. Services
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- Contain business logic
+- Handle data operations
+- Are injectable providers
+- Follow Single Responsibility Principle
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Example:
 
-```bash
-$ npm install -g mau
-$ mau deploy
+```typescript
+@Injectable()
+export class TasksService {
+  private tasks = [];
+
+  getAllTasks() {
+    return this.tasks;
+  }
+
+  createTask(createTaskDto: CreateTaskDto) {
+    const task = {
+      id: Date.now(),
+      ...createTaskDto,
+      status: 'OPEN',
+    };
+    this.tasks.push(task);
+    return task;
+  }
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 4. DTOs (Data Transfer Objects)
 
-## Resources
+- Define the shape of data for requests
+- Help with validation and type checking
+- Improve code readability and maintainability
 
-Check out a few resources that may come in handy when working with NestJS:
+Example:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```typescript
+export class CreateTaskDto {
+  title: string;
+  description: string;
+}
+```
 
-## Support
+## Important Concepts
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### When to Use Controllers in AppModule vs Feature Modules
 
-## Stay in touch
+1. **Feature Module Controllers (Most Common)**
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- Handle specific feature-related routes
+- Grouped under a specific path prefix
+- Encapsulated within their feature module
 
-## License
+```typescript
+// tasks.controller.ts in TasksModule
+@Controller('tasks')
+export class TasksController {
+  @Get()    // Route: /tasks
+  @Post()   // Route: /tasks
+  @Get('/:id') // Route: /tasks/:id
+}
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+2. **AppModule Controllers (App-wide Features)**
+
+- Handle application-wide routes
+- Manage global endpoints
+- Deal with general application concerns
+
+```typescript
+// app.controller.ts in AppModule
+@Controller()
+export class AppController {
+  @Get() // Route: /
+  getAppInfo() {
+    return {
+      name: 'Task Management API',
+      version: '1.0.0',
+      status: 'running',
+    };
+  }
+
+  @Get('health') // Route: /health
+  healthCheck() {
+    return { status: 'ok' };
+  }
+}
+```
+
+### Module Organization Examples
+
+1. **Simple Application**
+
+```typescript
+@Module({
+  imports: [TasksModule],
+})
+export class AppModule {}
+```
+
+2. **Medium Application**
+
+```typescript
+@Module({
+  imports: [
+    TasksModule,
+    UsersModule,
+    DatabaseModule.forRoot({
+      host: 'localhost',
+      port: 5432,
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+3. **Complex Application**
+
+```typescript
+@Module({
+  imports: [
+    TasksModule,
+    UsersModule,
+    AuthModule,
+    DatabaseModule.forRoot({
+      host: 'localhost',
+      port: 5432,
+    }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    LoggerModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+```
+
+## Testing the API
+
+### Using cURL
+
+```bash
+# Create Task
+curl -X POST http://localhost:3000/tasks \
+-H "Content-Type: application/json" \
+-d '{"title": "Learn NestJS", "description": "Complete the tutorial project"}'
+
+# Get All Tasks
+curl http://localhost:3000/tasks
+
+# Get Task by ID
+curl http://localhost:3000/tasks/1
+
+# Update Task Status
+curl -X PATCH http://localhost:3000/tasks/1/status \
+-H "Content-Type: application/json" \
+-d '{"status": "IN_PROGRESS"}'
+
+# Delete Task
+curl -X DELETE http://localhost:3000/tasks/1
+```
+
+## Next Steps for Enhancement
+
+1. **Add Data Validation**
+
+```typescript
+npm install class-validator class-transformer
+```
+
+2. **Database Integration**
+
+```typescript
+npm install @nestjs/typeorm typeorm pg
+```
+
+3. **Authentication**
+
+```typescript
+npm install @nestjs/jwt @nestjs/passport passport passport-jwt bcrypt
+```
+
+4. **API Documentation**
+
+```typescript
+npm install @nestjs/swagger swagger-ui-express
+```
+
+5. **Logging**
+
+```typescript
+npm install nest-winston winston
+```
+
+These notes cover the basic structure and concepts of NestJS, focusing on practical implementation and common use cases. For more detailed information, refer to the [official NestJS documentation](https://docs.nestjs.com/).
